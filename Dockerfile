@@ -1,31 +1,14 @@
-ARG REGISTRY=quay.io
-ARG OWNER=jupyter
-ARG BASE_CONTAINER=$REGISTRY/$OWNER/base-notebook
-FROM $BASE_CONTAINER
+# Use the specified r-notebook image as the base
+FROM quay.io/jupyter/r-notebook:2023-11-19
 
-RUN apt-get update --yes && \
-    apt-get install --yes --no-install-recommends \
-    # Common useful utilities
-    curl \
-    git \
-    nano-tiny \
-    tzdata \
-    unzip \
-    vim-tiny \
-    # git-over-ssh
-    openssh-client \
-    # `less` is needed to run help in R
-    # see: https://github.com/jupyter/docker-stacks/issues/1588
-    less \
-    # `nbconvert` dependencies
-    # https://nbconvert.readthedocs.io/en/latest/install.html#installing-tex
-    texlive-xetex \
-    texlive-fonts-recommended \
-    texlive-plain-generic \
-    # Enable clipboard on Linux host systems
-    xclip && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+# Optionally, you can add additional layers here, for example:
+# Install additional R packages
+USER root
+RUN conda install --quiet --yes \
+    'numpy=1.21.*' \
+    'r-essentials=4.1.*' && \
+    conda clean --all -f -y
+# Switch back to the notebook user to avoid running as root
+USER $NB_UID
 
-# Create alternative for nano -> nano-tiny
-RUN update-alternatives --install /usr/bin/nano nano /bin/nano-tiny 10
-
+# Additional custom setup can go here
